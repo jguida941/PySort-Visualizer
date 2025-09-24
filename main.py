@@ -1,29 +1,10 @@
-from __future__ import annotations
-
 import sys
+import os
 
-from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget
+# Add the 'src' directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
-from bubblesort_visualizer import BubbleSortVisualizer
-from mergesort_visualizer import MergeSortVisualizer
-from quicksort_visualizer import QuickSortVisualizer
-
-
-class MainWindow(QMainWindow):
-    def __init__(self) -> None:
-        super().__init__()
-        self.setWindowTitle("Sorting Algorithm Visualizers")
-        self.resize(1200, 850)
-
-        tabs = QTabWidget()
-        tabs.addTab(BubbleSortVisualizer(), "Bubble Sort")
-        tabs.addTab(QuickSortVisualizer(), "Quick Sort")
-        tabs.addTab(MergeSortVisualizer(), "Merge Sort")
-        self.setCentralWidget(tabs)
-
+from pysort_visualizer.app import main
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+    main()

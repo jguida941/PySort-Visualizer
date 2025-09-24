@@ -10,19 +10,38 @@ Key goals:
 - Offer a reusable base class (`AlgorithmVisualizerBase`) that handles UI composition, animation timing, narration, metrics, scrubbing, and CSV export.
 - Maintain scientific transparency by keeping swap narration stateless (values are embedded in the log) and by recording checkpoints for deterministic rewinds.
 
+## Bubble Sort
+<img width="1195" height="889" alt="Screenshot 2025-09-24 at 4 29 44 PM" src="https://github.com/user-attachments/assets/daf9c1b0-a47e-41ce-8943-ac38025a1c89" />
+
+## Quick Sort
+<img width="1189" height="871" alt="Screenshot 2025-09-24 at 4 29 54 PM" src="https://github.com/user-attachments/assets/57f80bd9-7a16-45a0-b132-accb7261aec3" />
+
+## Merge Sort
+
+<img width="1194" height="875" alt="Screenshot 2025-09-24 at 4 30 04 PM" src="https://github.com/user-attachments/assets/6b41e5e3-d5ee-4ff0-8698-d3aaa4b591c0" />
+
 
 ## Repository Layout
 
 ```
 MergeSortAlgorithm-master/
-├── base.py                  # Shared PyQt6 widget providing UI, timing, narration, scrub, export.
-├── bubblesort_visualizer.py # Bubble sort subclass using the base framework.
-├── quicksort_visualizer.py  # Iterative Quick Sort subclass (median-of-three + Lomuto partition).
-├── mergesort_visualizer.py  # Bottom-up Merge Sort subclass.
-├── main.py                  # PyQt6 entry point wiring the visualizers into tabs.
-├── requirements.txt         # Python dependencies (PyQt6).
-├── setup.sh / setup.bat     # Convenience scripts for creating a virtual environment.
-├── logs/                    # Runtime log output (`sorting_viz.log`).
+├── src/
+│   └── pysort_visualizer/
+│       ├── __init__.py
+│       ├── app.py             # PyQt6 application setup and main window.
+│       ├── base.py            # Shared base class for algorithm visualizers.
+│       ├── bubble.py          # Bubble Sort implementation.
+│       ├── quick.py           # Quick Sort implementation.
+│       └── merge.py           # Merge Sort implementation.
+├── docs/
+│   ├── audit.md
+│   └── improvements.md
+├── scripts/
+│   ├── setup.bat
+│   └── setup.sh
+├── main.py                  # Application entry point.
+├── requirements.txt         # Python dependencies.
+├── logs/                    # Log file directory.
 └── README.md                # This documentation.
 ```
 
@@ -47,6 +66,8 @@ pip install -r requirements.txt
 # Launch the application
 python main.py
 ```
+
+**Note:** Always start the application by running `python main.py` from the project's root directory. Do not run `app.py` or other module files directly, as this will cause import errors.
 
 ### Platform Notes
 

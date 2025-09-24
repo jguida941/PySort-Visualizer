@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterator, List, Tuple
 
-from base import AlgorithmVisualizerBase, Step
+from .base import AlgorithmVisualizerBase, Step
 
 
 class QuickSortVisualizer(AlgorithmVisualizerBase):

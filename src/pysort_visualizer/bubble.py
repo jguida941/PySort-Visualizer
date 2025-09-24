@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterator, List
 
-from base import AlgorithmVisualizerBase, Step
+from .base import AlgorithmVisualizerBase, Step
 
 
 class BubbleSortVisualizer(AlgorithmVisualizerBase):
