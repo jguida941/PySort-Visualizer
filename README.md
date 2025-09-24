@@ -10,6 +10,16 @@ Key goals:
 - Offer a reusable base class (`AlgorithmVisualizerBase`) that handles UI composition, animation timing, narration, metrics, scrubbing, and CSV export.
 - Maintain scientific transparency by keeping swap narration stateless (values are embedded in the log) and by recording checkpoints for deterministic rewinds.
 
+## Bubble Sort
+<img width="1195" height="889" alt="Screenshot 2025-09-24 at 4 29 44 PM" src="https://github.com/user-attachments/assets/daf9c1b0-a47e-41ce-8943-ac38025a1c89" />
+
+## Quick Sort
+<img width="1189" height="871" alt="Screenshot 2025-09-24 at 4 29 54 PM" src="https://github.com/user-attachments/assets/57f80bd9-7a16-45a0-b132-accb7261aec3" />
+
+## Merge Sort
+
+<img width="1194" height="875" alt="Screenshot 2025-09-24 at 4 30 04 PM" src="https://github.com/user-attachments/assets/6b41e5e3-d5ee-4ff0-8698-d3aaa4b591c0" />
+
 
 ## Repository Layout
 
