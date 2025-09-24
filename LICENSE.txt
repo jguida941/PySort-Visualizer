@@ -1,0 +1,37 @@
+Educator Non-Commercial License (ENCL) v1.0
+
+Copyright (c) 2025, Justin Guida
+
+Permission is hereby granted, free of charge, to any person or organization
+obtaining a copy of this software and associated documentation files (the
+"Software"), to use, reproduce, display, and distribute the Software for
+non-commercial academic, educational, or personal learning purposes, subject to
+the following conditions:
+
+1. Non-Commercial Use: The Software may not be used, in whole or in part, for
+   any commercial purpose without prior written permission from the copyright
+   holders. Commercial purposes include, but are not limited to, integrating the
+   Software into proprietary products, selling access to the Software, or
+   providing paid services based on the Software.
+
+2. Attribution: All redistributions of the Software must retain this license
+   text, including attribution to the original authors and contributors.
+
+3. Modifications: You may modify the Software for non-commercial purposes.
+   Modified versions must clearly state the changes made and retain this
+   license. If distributed, modified versions must include prominent notice that
+   they are not the original Software.
+
+4. Warranty Disclaimer: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+   ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN
+   NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+   DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR
+   OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE
+   USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+5. Termination: Any violation of the terms above automatically terminates the
+   permission granted by this license.
+
+For commercial licensing inquiries, please contact Justin Guida at
+justn.guida@snhu.edu.

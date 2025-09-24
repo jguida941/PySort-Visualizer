@@ -1,0 +1,22 @@
+2025-09-24 15:55:35,845 | INFO | Randomized n=32
+2025-09-24 15:55:35,845 | INFO | Start algo=Bubble Sort fps=24 n=32
+2025-09-24 15:56:01,689 | INFO | Finished algo=Bubble Sort comps=451 swaps=194
+2025-09-24 15:56:07,662 | INFO | Randomized n=32
+2025-09-24 15:56:09,749 | INFO | Start algo=Quick Sort (Iterative) fps=24 n=32
+2025-09-24 15:56:22,152 | INFO | Finished algo=Quick Sort (Iterative) comps=194 swaps=96
+2025-09-24 15:56:29,468 | INFO | Start algo=Quick Sort (Iterative) fps=10 n=32
+2025-09-24 15:56:37,646 | INFO | Randomized n=32
+2025-09-24 15:56:37,647 | INFO | Start algo=Merge Sort (Iterative) fps=24 n=32
+2025-09-24 15:56:50,209 | INFO | Finished algo=Merge Sort (Iterative) comps=122 swaps=0
+2025-09-24 15:57:00,480 | INFO | Finished algo=Quick Sort (Iterative) comps=194 swaps=96
+2025-09-24 15:58:13,001 | INFO | Start algo=Merge Sort (Iterative) fps=24 n=15
+2025-09-24 15:58:17,406 | INFO | Finished algo=Merge Sort (Iterative) comps=36 swaps=0
+2025-09-24 16:02:18,961 | INFO | Start algo=Quick Sort (Iterative) fps=10 n=32
+2025-09-24 16:02:49,982 | INFO | Finished algo=Quick Sort (Iterative) comps=194 swaps=96
+2025-09-24 16:12:04,373 | INFO | Randomized n=32
+2025-09-24 16:12:04,374 | INFO | Start algo=Bubble Sort fps=24 n=32
+2025-09-24 16:12:15,056 | INFO | Randomized n=32
+2025-09-24 16:12:17,409 | INFO | Start algo=Quick Sort (Iterative) fps=24 n=32
+2025-09-24 16:12:23,957 | INFO | Randomized n=32
+2025-09-24 16:12:25,383 | INFO | Start algo=Merge Sort (Iterative) fps=24 n=32
+2025-09-24 16:12:37,907 | INFO | Finished algo=Merge Sort (Iterative) comps=121 swaps=0

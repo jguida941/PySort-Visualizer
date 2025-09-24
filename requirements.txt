@@ -1,0 +1,5 @@
+PyQt6>=6.5.0
+# The following components are included in PyQt6:
+# - PyQt6.QtWidgets
+# - PyQt6.QtCore
+# - PyQt6.QtGui
