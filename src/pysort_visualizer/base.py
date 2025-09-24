@@ -8,10 +8,10 @@ from dataclasses import dataclass
 from logging.handlers import RotatingFileHandler
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
-from PyQt6.QtCore import Qt, QTimer, QSize
-from PyQt6.QtGui import QColor, QPainter, QBrush, QFontDatabase, QKeySequence, QShortcut
+from PyQt6.QtCore import Qt, QTimer, QSize, QRect
+from PyQt6.QtGui import QPen, QColor, QPainter, QBrush, QFontDatabase, QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+    QStyle, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
     QSplitter, QListWidget, QListWidgetItem, QSlider, QTextEdit, QMessageBox,
     QSizePolicy, QFileDialog, QSpinBox
 )
@@ -99,7 +99,8 @@ class VisualizationCanvas(QWidget):
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(self._cfg.bg_color))
 
-        bar_outline = QColor("#0d0f14")
+        pen = QPen(QColor("#0d0f14")); pen.setCosmetic(True)
+        painter.setPen(pen)
 
         if arr:
             w = self.width()
@@ -125,6 +126,7 @@ class VisualizationCanvas(QWidget):
             merge_idx = set(highlights.get("merge", ()))
             confirm_idx = set(confirms)
 
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
             for i, v in enumerate(arr):
                 bar_h = max(1, int(v * scale))
                 y = h - self._cfg.padding_px - bar_h
@@ -143,27 +145,48 @@ class VisualizationCanvas(QWidget):
                     brush = base
 
                 painter.fillRect(x, y, bar_w, bar_h, brush)
-                painter.setPen(bar_outline)
+
                 painter.drawRect(x, y, bar_w, bar_h)
                 x += bar_w + gap
 
-        # HUD
+        # --- Upgraded HUD (rounded, translucent panel) ---
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setPen(QColor(self._cfg.hud_color))
-        hud_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
-        if hud_font.pointSize() > 0:
-            hud_font.setPointSize(max(8, hud_font.pointSize()))
-        painter.setFont(hud_font)
+        painter.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+
         hud_lines = [
             f"Algo: {metrics.get('algo','')}",
             f"n={len(arr) if arr else 0} | FPS={metrics.get('fps', 0)}",
             f"Compare={metrics.get('comparisons', 0)} | Swaps={metrics.get('swaps', 0)}",
             f"Steps={metrics.get('step_idx', 0)}/{metrics.get('total_steps','?')} | Time={metrics.get('elapsed_s', 0.0):.2f}s"
         ]
-        x0 = self._cfg.padding_px
-        y0 = self._cfg.padding_px + 14
-        for line in hud_lines:
-            painter.drawText(x0, y0, line)
-            y0 += 16
+
+        fm = painter.fontMetrics()
+        line_h = fm.lineSpacing()
+        pad = 6
+        x_text = self._cfg.padding_px
+        y_text = self._cfg.padding_px
+
+        w_text = max(fm.horizontalAdvance(s) for s in hud_lines) if hud_lines else 0
+        h_text = line_h * len(hud_lines)
+
+        bg_rect = QRect(
+            x_text - pad,
+            y_text - pad,
+            w_text + pad * 2,
+            h_text + pad * 2
+        )
+
+        # Panel
+        painter.setBrush(QColor(0, 0, 0, 120))  # translucent black
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRoundedRect(bg_rect, 6, 6)
+
+        # Text
+        painter.setPen(QColor(self._cfg.hud_color))
+        for i, line in enumerate(hud_lines):
+            # drawText baseline is at y + ascent
+            painter.drawText(x_text, y_text + fm.ascent() + i * line_h, line)
 
         painter.end()
 
@@ -184,6 +207,13 @@ class AlgorithmVisualizerBase(QWidget):
     def __init__(self, cfg: Optional[VizConfig] = None, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.cfg = cfg or VizConfig()
+
+        # Ensure this widget really paints a dark background (not the parent’s light gray)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setAutoFillBackground(True)
+        pal = self.palette()
+        pal.setColor(self.backgroundRole(), QColor(self.cfg.bg_color))
+        self.setPalette(pal)
 
         # model
         self._array: List[int] = []
@@ -227,7 +257,9 @@ class AlgorithmVisualizerBase(QWidget):
         root = QVBoxLayout(self)
 
         row = QHBoxLayout()
-        row.addWidget(QLabel("Input (comma ints) or leave blank to randomize:"))
+        lbl_input = QLabel("Input (comma ints) or leave blank to randomize:")
+        lbl_input.setObjectName("caption")
+        row.addWidget(lbl_input)
         self.le_input = QLineEdit()
         self.le_input.setPlaceholderText("e.g. 5,2,9,1,5,6")
         self.btn_random = QPushButton("Randomize")
@@ -242,9 +274,12 @@ class AlgorithmVisualizerBase(QWidget):
         row.addWidget(self.btn_pause)
         row.addWidget(self.btn_reset)
         row.addWidget(self.btn_export)
+        row.setSpacing(8); row.setContentsMargins(8, 6, 8, 0)
 
         speed_row = QHBoxLayout()
-        speed_row.addWidget(QLabel("FPS:"))
+        fps_label = QLabel("FPS:")
+        fps_label.setObjectName("caption")
+        speed_row.addWidget(fps_label)
         self.sld_fps = QSlider(Qt.Orientation.Horizontal)
         self.sld_fps.setRange(self.cfg.fps_min, self.cfg.fps_max)
         self.sld_fps.setValue(self.cfg.fps_default)
@@ -255,17 +290,32 @@ class AlgorithmVisualizerBase(QWidget):
         self.spn_fps.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
         self.spn_fps.setFixedWidth(64)
         speed_row.addWidget(self.spn_fps)
+        speed_row.setSpacing(8);  speed_row.setContentsMargins(8, 0, 8, 0)
 
         scrub_row = QHBoxLayout()
         self.lbl_scrub = QLabel("Step: 0/0")
+        self.lbl_scrub.setObjectName("caption")
         self.sld_scrub = QSlider(Qt.Orientation.Horizontal)
         self.sld_scrub.setRange(0, 0)
         self.btn_step_fwd = QPushButton("Step ▶")
         self.btn_step_back = QPushButton("Step ◀")
+
+        icon_size = QSize(16, 16)
+        for btn in (self.btn_random, self.btn_start, self.btn_pause, self.btn_reset, self.btn_export, self.btn_step_back, self.btn_step_fwd):
+            btn.setIconSize(icon_size)
+
+        self.btn_random.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload))
+        self.btn_start.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self.btn_pause.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPause))
+        self.btn_reset.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton))
+        self.btn_export.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton))
+        self.btn_step_back.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowBack))
+        self.btn_step_fwd.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowForward))
         scrub_row.addWidget(self.lbl_scrub)
         scrub_row.addWidget(self.sld_scrub)
         scrub_row.addWidget(self.btn_step_back)
         scrub_row.addWidget(self.btn_step_fwd)
+        scrub_row.setSpacing(8);  scrub_row.setContentsMargins(8, 0, 8, 6)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         self.canvas = VisualizationCanvas(self._get_canvas_state, self.cfg)
@@ -281,6 +331,11 @@ class AlgorithmVisualizerBase(QWidget):
 
         right = QVBoxLayout()
         right_w = QWidget()
+        right_w.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        right_w.setAutoFillBackground(True)
+        rp = right_w.palette()
+        rp.setColor(right_w.backgroundRole(), QColor(self.cfg.bg_color))
+        right_w.setPalette(rp)
         right_w.setLayout(right)
         right.addWidget(QLabel("Steps"))
         self.lst_steps = QListWidget()
@@ -310,16 +365,72 @@ class AlgorithmVisualizerBase(QWidget):
 
         root.setContentsMargins(12, 12, 12, 12)
         root.setSpacing(8)
-        self.setStyleSheet(
-            """
-            QWidget { color: #e6e6e6; background-color: #0f1115; }
-            QListWidget, QTextEdit { background: #12151b; border: 1px solid #2a2f3a; }
-            QLineEdit { background: #12151b; border: 1px solid #2a2f3a; padding: 4px; }
-            QPushButton { background: #1a1f27; border: 1px solid #2a2f3a; padding: 6px 10px; }
-            QPushButton:hover { background: #202634; }
-            QLabel#narrationLabel { background: #10131a; border: 1px solid #232838; border-radius: 6px; padding: 6px 8px; color: #cdd2e1; }
-            """
-        )
+        self.setStyleSheet("""
+/* Global */
+QWidget { color:#e6e6e6; background:#0f1115; }
+
+/* Accent helpers */
+ @accent: #6aa0ff; /* (Qt ignores variables, left as a reminder) */
+
+/* Caption pills – same accent as buttons */
+QLabel#caption {
+  color:#e6e6e6;
+  background:rgba(106,160,255,0.06);
+  border:1px solid #6aa0ff;
+  border-radius:8px;
+  padding:4px 10px;
+  font-weight:600;
+}
+
+/* Inputs (LineEdit + SpinBox) – same hollow glass */
+QLineEdit, QAbstractSpinBox {
+  color:#e6e6e6;
+  background:rgba(106,160,255,0.06);
+  border:1px solid #6aa0ff;
+  border-radius:6px;
+  padding:6px 8px;
+}
+QLineEdit::placeholder { color:#b6bfca; }
+QLineEdit:focus, QAbstractSpinBox:focus { border-color:#9bc0ff; }
+
+/* Buttons – hollow glass */
+QPushButton {
+  color:#e6e6e6;
+  background:transparent;
+  border:1px solid #6aa0ff;
+  border-radius:6px;
+  padding:6px 10px;
+}
+QPushButton:hover   { background:rgba(106,160,255,0.20); }
+QPushButton:pressed { background:rgba(106,160,255,0.40); }
+QPushButton:disabled{
+  color:#7b8496; border-color:#3e4a60; background:transparent;
+}
+
+/* Lists / Log – same accent frame */
+QListWidget, QTextEdit {
+  color:#e6e6e6;
+  background:rgba(106,160,255,0.04);
+  border:1px solid #6aa0ff;
+  border-radius:6px;
+}
+QListWidget::item:selected { background:#243042; }
+
+/* Sliders – groove outlined in accent so FPS/Step “match” */
+QSlider::groove:horizontal {
+  height:8px;
+  background:rgba(106,160,255,0.06);
+  border:1px solid #6aa0ff;
+  border-radius:4px;
+}
+QSlider::handle:horizontal {
+  width:18px;
+  background:#e6e6e6;
+  border:1px solid #6aa0ff;
+  border-radius:9px;
+  margin:-6px 0;
+}
+""")
 
     def _rebind(self) -> None:
         self.btn_random.clicked.connect(self._on_randomize)
@@ -417,7 +528,6 @@ class AlgorithmVisualizerBase(QWidget):
         self._append_checkpoint(0)  # checkpoint at step 0
         self.canvas.update()
         self._update_ui_state("idle")
-        self._set_narration()
         self._update_scrub_ui()
 
     def _append_checkpoint(self, step_idx: int) -> None:

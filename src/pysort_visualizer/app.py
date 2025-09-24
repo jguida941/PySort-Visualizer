@@ -24,6 +24,19 @@ class MainWindow(QMainWindow):
 
 def main() -> None:
     app = QApplication(sys.argv)
+    app.setStyleSheet("""
+QMainWindow, QTabWidget::pane, QTabWidget {
+  background: #0f1115;
+}
+QTabBar::tab {
+  background: #1a1f27;
+  color: #cfd6e6;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+QTabBar::tab:selected { background: #2a2f3a; color: #ffffff; }
+QTabBar::tab:hover    { background: #202634; }
+""")
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
