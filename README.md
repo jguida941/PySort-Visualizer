@@ -1,16 +1,34 @@
-# Sorting Algorithm Visualizer
+# 🧩 Sorting Algorithm Visualizer
 
-A production-grade, research-friendly PyQt6 desktop application for studying sorting algorithms.  
-Every animation frame is backed by an explicit stream of `Step` records, ensuring deterministic replay, reproducible metrics, and faithful narration for each algorithmic operation.
+A production-grade, research-friendly PyQt6 visualizer for sorting algorithms and data structures **built for educators, students, and curious engineers** to explore algorithms through visual, step-by-step interaction, because seeing is the best way to learn.
+
+Every animation frame is backed by an explicit stream of Step records, ensuring deterministic replay, reproducible metrics, and faithful narration of each operation.
+
+**From bubble to quick and merge: compare, replay, and measure, all in one PyQt6 desktop tool.**
 
 ---
+## Bubble Sort
+<img width="1196" height="863" alt="Screenshot 2025-09-24 at 10 04 57 PM" src="https://github.com/user-attachments/assets/d0890b71-0cf3-4524-852b-1460731cac60" />
+
+## Insertion Sort
+<img width="1196" height="862" alt="Screenshot 2025-09-24 at 10 05 13 PM" src="https://github.com/user-attachments/assets/3efada78-2c30-4170-8ea4-e0770952a4e0" />
+
+## Merge Sort
+<img width="1198" height="870" alt="Screenshot 2025-09-24 at 10 05 33 PM" src="https://github.com/user-attachments/assets/b39540ec-da03-49f7-83c7-a479b16e32f0" />
+
+## Quick Sort
+<img width="1192" height="869" alt="Screenshot 2025-09-24 at 10 05 53 PM" src="https://github.com/user-attachments/assets/d429b449-798e-4d88-b59a-f573cc720f6b" />
+
+## CSV Export
+<img width="1191" height="873" alt="Screenshot 2025-09-24 at 10 06 22 PM" src="https://github.com/user-attachments/assets/6da7494c-9210-465f-bb83-a0428e118929" />
+
 
 ## Highlights
 
-- **Instrumented algorithms** — Bubble, Insertion, Iterative Quick (median-of-three), and Bottom‑Up Merge Sort register themselves through a plugin registry. Each yields richly-typed `Step` objects so the UI, narration, and tests stay in lockstep.
-- **Deterministic replay** — Checkpoints capture array snapshots/metrics every *n* steps (`VizConfig.checkpoint_stride`). Seeking restores the nearest checkpoint, replays intervening steps, and guarantees the HUD, highlights, and narration remain coherent.
-- **Manual & automated playback** — `Step ▶`/`Step ◀` buttons advance or rewind one step at a time (even before a full run), while the timer provides smooth animation at user-selected FPS. Scrubbing, keyboard shortcuts, and narration updates respect both modes.
-- **Color-coded semantics** — Dedicated highlight channels clarify intent:
+- **Instrumented algorithms**: Bubble, Insertion, Iterative Quick (median-of-three), and Bottom‑Up Merge Sort register themselves through a plugin registry. Each yields richly-typed `Step` objects so the UI, narration, and tests stay in lockstep.
+- **Deterministic replay**: Checkpoints capture array snapshots/metrics every *n* steps (`VizConfig.checkpoint_stride`). Seeking restores the nearest checkpoint, replays intervening steps, and guarantees the HUD, highlights, and narration remain coherent.
+- **Manual & automated playback**: `Step ▶`/`Step ◀` buttons advance or rewind one step at a time (even before a full run), while the timer provides smooth animation at user-selected FPS. Scrubbing, keyboard shortcuts, and narration updates respect both modes.
+- **Color-coded semantics**: Dedicated highlight channels clarify intent:
   - Cyan = key being inserted (`Step("key", ...)`)
   - Orange = shift writes during insertion (`Step("shift", ...)`)
   - Yellow = comparisons
@@ -18,9 +36,9 @@ Every animation frame is backed by an explicit stream of `Step` records, ensurin
   - Green = pivots / finish confirmations
   - Violet = merge ranges
   A legend beneath the log explains the palette in the running app.
-- **Robust crash handling** — A hardened `sys.excepthook` writes to a rotating log under the user’s log directory (via `platformdirs`) and displays a critical dialog only when a `QApplication` exists.
-- **Persistence** — User FPS, last input array, window geometry, and UI theme preferences round-trip automatically through `QSettings` (`org.pysort/sorting-visualizer`).
-- **Production toolchain** — `ruff`, `black`, `mypy --strict`, and `pytest` all pass; algorithms are validated with property-based tests, determinism checks, and replay harnesses.
+- **Robust crash handling**: A hardened `sys.excepthook` writes to a rotating log under the user’s log directory (via `platformdirs`) and displays a critical dialog only when a `QApplication` exists.
+- **Persistence**: User FPS, last input array, window geometry, and UI theme preferences round-trip automatically through `QSettings` (`org.pysort/sorting-visualizer`).
+- **Production toolchain**: `ruff`, `black`, `mypy --strict`, and `pytest` all pass; algorithms are validated with property-based tests, determinism checks, and replay harnesses.
 
 ---
 
