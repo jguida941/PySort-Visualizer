@@ -39,15 +39,16 @@ This document outlines the plan to elevate the project to a production-grade app
 **Priority Order:**
 
 - [ ] **Core Algorithms:**
-    - [ ] Insertion Sort (stable, in-place)
-    - [ ] Selection Sort (in-place)
-    - [ ] Heap Sort (in-place, O(n log n))
-    - [ ] Shell Sort (gap sequences)
-    - [ ] Cocktail Shaker / Comb Sort
+    - [x] Insertion Sort (stable, in-place) — implemented in `src/app/algos/insertion.py`, covered by property/determinism/invariant tests.
+    - [x] Selection Sort (in-place) — implemented in `src/app/algos/selection.py`, integrated into registry/tests.
+    - [x] Heap Sort (in-place, O(n log n)) — implemented in `src/app/algos/heap.py`, validated by full test suite.
+    - [x] Shell Sort (gap sequences) — implemented in `src/app/algos/shell.py`, validated by full test suite.
+    - [x] Cocktail Shaker Sort — implemented in `src/app/algos/cocktail.py`.
+    - [x] Comb Sort — implemented in `src/app/algos/comb.py`.
 - [ ] **Non-Comparison Algorithms:**
-    - [ ] Counting Sort
-    - [ ] Radix Sort LSD
-    - [ ] Bucket Sort
+    - [x] Counting Sort — implemented in `src/app/algos/counting.py`, stable and deterministic.
+    - [x] Radix Sort LSD — implemented in `src/app/algos/radix_lsd.py`, handles ints via offsetting.
+    - [x] Bucket Sort — implemented in `src/app/algos/bucket.py`, outputs stable sorted buckets.
 - [ ] **Advanced:**
     - [ ] Timsort "trace" (simplified)
 - [ ] **Algorithm Metadata:**

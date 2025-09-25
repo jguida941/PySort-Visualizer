@@ -1,20 +1,12 @@
 from __future__ import annotations
 
-from importlib import import_module
-
-from app.algos.registry import REGISTRY
+from app.algos.registry import REGISTRY, load_all_algorithms
 from app.core.replay import apply_step_sequence
 
-for module in (
-    "app.algos.bubble",
-    "app.algos.insertion",
-    "app.algos.merge",
-    "app.algos.quick",
-):
-    import_module(module)
+load_all_algorithms()
 
 
-def test_step_replay_deterministic():
+def test_step_replay_deterministic() -> None:
     initial_array = [5, 3, 4, 1, 2]
 
     for name, algo in REGISTRY.items():

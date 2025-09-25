@@ -115,22 +115,38 @@ All algorithms operate on the same contract; replay code treats `shift` exactly 
 ### Tests
 - `pytest -q` exercises deterministic behaviour, property checks (Hypothesis up to 60 integers, −1000..1000), and step replay invariants.
 - `mypy src` runs under `--strict`; Qt stubs are ignored via `ignore_missing_imports = true` to work around incomplete PyQt6 type hints.
-- `ruff` (style, pyupgrade, import sort) and `black` keep the codebase consistent; the repo ships with `.pre-commit-config.yaml` so hooks can be installed locally.
+- `ruff` (style, pyupgrade, import sort) and `black` keep the codebase consistent; add them to your own pre-commit hooks if you want automatic formatting.
 
 ---
 
 ## Algorithms in Detail
 
-| Algorithm        | Stable | In-Place | Complexity                         | Highlights                                                                          |
-|------------------|:------:|:--------:|------------------------------------|--------------------------------------------------------------------------------------|
-| Bubble Sort      | ✓      | ✓        | Best `O(n)`, Avg/Worst `O(n²)`     | Yellow comparisons, red swaps; early-exit when a pass has zero swaps.               |
-| Insertion Sort   | ✓      | ✓        | Best `O(n)`, Avg/Worst `O(n²)`     | Cyan key highlight, orange shifts, green placement confirmation, yellow compares.  |
-| Quick Sort       | ✗      | ✓        | Best/Avg `O(n log n)`, Worst `O(n²)` | Median-of-three pivot selection, pivots highlighted green, swaps recorded with payloads. |
-| Merge Sort       | ✓      | ✗        | `O(n log n)` best/avg/worst        | Violet merge windows, yellow comparisons, orange merge writes, deterministic bottom-up passes. |
+| Algorithm             | Stable | In-Place | Type         | Complexity (best / avg / worst)       | Highlights                                                                             |
+|-----------------------|:------:|:--------:|--------------|----------------------------------------|----------------------------------------------------------------------------------------|
+| Bubble Sort           | ✓      | ✓        | Comparison   | `O(n)` / `O(n²)` / `O(n²)`            | Yellow comparisons, red swaps; early-exit when a pass has zero swaps.                 |
+| Insertion Sort        | ✓      | ✓        | Comparison   | `O(n)` / `O(n²)` / `O(n²)`            | Cyan key highlight, orange shifts, green placement confirmation, yellow compares.    |
+| Selection Sort        | ✗      | ✓        | Comparison   | `O(n²)` / `O(n²)` / `O(n²)`           | Tracks current minimum with a cyan key; confirms ends of the array first.            |
+| Heap Sort             | ✗      | ✓        | Comparison   | `O(n log n)` / `O(n log n)` / `O(n log n)` | Max-heap build and sift-down steps recorded with compare/swap events.             |
+| Shell Sort            | ✗      | ✓        | Comparison   | `O(n log n)` / `O(n²)` / `O(n²)`       | Gap-based insertion with `shift` events; final `key()` clears highlight.             |
+| Cocktail Shaker Sort  | ✓      | ✓        | Comparison   | `O(n)` / `O(n²)` / `O(n²)`            | Bi-directional bubble passes; ends get confirmed after each sweep.                   |
+| Comb Sort             | ✗      | ✓        | Comparison   | `O(n log n)` / `O(n²)` / `O(n²)`       | Shrinking gap (factor 1.3) removes turtles; finish sweep confirms every element.     |
+| Quick Sort            | ✗      | ✓        | Comparison   | `O(n log n)` / `O(n log n)` / `O(n²)` | Median-of-three pivot selection, pivots highlighted green, swaps recorded with payloads. |
+| Merge Sort            | ✓      | ✗        | Comparison   | `O(n log n)` / `O(n log n)` / `O(n log n)` | Violet merge windows, yellow comparisons, orange merge writes, deterministic bottom-up passes. |
+| Counting Sort         | ✓      | ✗        | Non-comparison | `O(n + k)` / `O(n + k)` / `O(n + k)` | Uses buckets indexed by value; writes back with `set` + cyan key highlights.         |
+| Radix Sort (LSD)      | ✓      | ✗        | Non-comparison | `O(d(n + k))` across passes           | Offsets negatives once, then leverages stable per-digit counting to churn through integers efficiently; every placement is streamed via `set`. |
+| Bucket Sort           | ✓      | ✗        | Non-comparison | `O(n)` / `O(n + k)` / `O(n²)`         | Normalizes values into buckets, sorts locally, replays as stable writes.             |
 
 These stability and in-place columns reflect the classical algorithmic properties (not implementation bugs): Bubble and Insertion Sort are naturally stable and in-place, Quick Sort (with standard Lomuto partition) is not stable but remains in-place, and Bottom-Up Merge Sort is stable but requires auxiliary storage.
 
 Each implementation mutates its working copy in sync with emitted steps so that `apply_step_sequence(original, steps)` equals both the generator’s final array and Python’s `sorted(original)`.
+
+### Performance Notes
+
+- **Linear-time specialists.** Counting Sort and Radix Sort (LSD) excel on integer datasets when the range (`k`) or number of digits (`d`) remain modest. Radix offsets negatives a single time and then streams stable per-digit counting passes, making it a go-to choice for large integer workloads.
+- **Distribution-aware Bucket Sort.** Bucket Sort normalizes values into `n` buckets and sorts inside each bucket using Python’s highly optimised Timsort. It performs best when values are uniformly distributed; in adversarial cases where all elements land in one bucket, the complexity degrades toward quadratic.
+- **Gap-based accelerators.** Shell Sort and Comb Sort reduce “turtles” (small values trapped near the end of the array) far faster than pure quadratic sorts by comparing elements `gap` positions apart before finishing with insertion/bubble behaviour.
+- **General-purpose workhorses.** Quick Sort remains the fastest comparison sort on average, Heap Sort guarantees `O(n log n)` regardless of input, and Merge Sort provides stability with predictable performance.
+- **Nearly sorted data.** Insertion Sort and Cocktail Shaker Sort run in linear time when the input is almost sorted. Bubble and Selection Sort remain in the suite mainly as pedagogical baselines.
 
 ---
 

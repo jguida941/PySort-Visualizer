@@ -1,0 +1,4 @@
+# file: /Users/jguida941/Downloads/MergeSortAlgorithm-master/src/app/algos/shell.py
+# hypothesis_version: 6.140.2
+
+['O(n log n)', 'O(n^(3/2))', 'O(n^2)', 'Shell Sort', 'avg', 'best', 'compare', 'key', 'set', 'shift', 'worst']

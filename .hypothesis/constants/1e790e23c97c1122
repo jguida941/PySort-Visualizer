@@ -1,0 +1,4 @@
+# file: /Users/jguida941/Downloads/MergeSortAlgorithm-master/src/app/algos/registry.py
+# hypothesis_version: 6.140.2
+
+['app.algos.bubble', 'app.algos.bucket', 'app.algos.cocktail', 'app.algos.comb', 'app.algos.counting', 'app.algos.heap', 'app.algos.insertion', 'app.algos.merge', 'app.algos.quick', 'app.algos.radix_lsd', 'app.algos.selection', 'app.algos.shell']

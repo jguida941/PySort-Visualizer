@@ -1,26 +1,19 @@
 from __future__ import annotations
 
 import sys
-from importlib import import_module
 
 from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget
 
-from app.algos.registry import INFO, REGISTRY
+from app.algos.registry import INFO, REGISTRY, load_all_algorithms
 from app.core.base import AlgorithmVisualizerBase
 
 _ORG_NAME = "org.pysort"
 _APP_NAME = "sorting-visualizer"
 _APP_DOMAIN = "sortingviz.dev"
 
-for module in (
-    "app.algos.bubble",
-    "app.algos.insertion",
-    "app.algos.merge",
-    "app.algos.quick",
-):
-    import_module(module)
+load_all_algorithms()
 
 
 class MainWindow(QMainWindow):

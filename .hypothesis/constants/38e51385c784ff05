@@ -1,0 +1,4 @@
+# file: /Users/jguida941/Downloads/MergeSortAlgorithm-master/src/app/algos/bucket.py
+# hypothesis_version: 6.140.2
+
+['Bucket Sort', 'O(n + k)', 'O(n)', 'O(n^2)', 'avg', 'best', 'confirm', 'key', 'set', 'worst']

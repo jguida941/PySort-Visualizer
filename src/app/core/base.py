@@ -701,8 +701,7 @@ QSpinBox::up-button, QSpinBox::down-button {{ width: 0; height: 0; border: none;
         self.btn_pause.clicked.connect(self._on_pause)
         self.btn_reset.clicked.connect(self._on_reset)
         self.sld_fps.valueChanged.connect(self._on_fps_changed)
-        self.sld_fps.valueChanged.connect(self.spn_fps.setValue)
-        self.spn_fps.valueChanged.connect(self.sld_fps.setValue)
+        self.spn_fps.valueChanged.connect(self._on_fps_changed)
         self.btn_export.clicked.connect(self._on_export)
         self.le_input.editingFinished.connect(
             lambda: self._settings.setValue("viz/last_input", self.le_input.text())
@@ -893,6 +892,11 @@ QSpinBox::up-button, QSpinBox::down-button {{ width: 0; height: 0; border: none;
             self.txt_log.append("Paused")
             self._update_ui_state("paused")
         else:
+            if self._step_source is None and (
+                self._confirm_progress >= 0 or not self._steps or self._step_idx >= len(self._steps)
+            ):
+                self._warn("Nothing to resume.")
+                return
             fps = max(self.cfg.fps_min, min(self.cfg.fps_max, self.sld_fps.value()))
             self._timer.start(int(1000 / fps))
             self.txt_log.append("Resumed")
@@ -908,9 +912,17 @@ QSpinBox::up-button, QSpinBox::down-button {{ width: 0; height: 0; border: none;
         self._update_ui_state("idle")
 
     def _on_fps_changed(self, v: int) -> None:
-        self._settings.setValue("viz/fps", int(v))
+        # keep slider/spin synchronized without causing recursive events
+        for widget in (self.sld_fps, self.spn_fps):
+            if widget.value() != v:
+                widget.blockSignals(True)
+                widget.setValue(v)
+                widget.blockSignals(False)
+
+        clamped = max(self.cfg.fps_min, min(self.cfg.fps_max, int(v)))
+        self._settings.setValue("viz/fps", clamped)
         if self._timer.isActive():
-            self._timer.start(int(1000 / max(1, v)))
+            self._timer.start(int(1000 / max(1, clamped)))
 
     def _on_export(self) -> None:
         if not self._steps:
@@ -1003,6 +1015,7 @@ QSpinBox::up-button, QSpinBox::down-button {{ width: 0; height: 0; border: none;
                 self._timer.timeout.disconnect(self._tick)
             self._timer.timeout.connect(self._tick)
             self._set_narration("Array sorted!")
+            self._confirm_progress = -1
 
     # ---------- step application and highlights
 
