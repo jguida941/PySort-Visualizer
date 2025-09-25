@@ -1,0 +1,30 @@
+updated with differnt sorting algorithms and idd all this 
+- [x] **Project Layout:** Refactor the project into a more standard layout (baseline `src/app` structure in place; `ui/` and `presets/` modules stubbed for upcoming work):
+    - `app/core/`: Step model, playback, checkpoints, metrics
+    - `app/ui/`: widgets, styles, icons, resources.qrc
+    - `app/algos/`: each algorithm in its own module
+    - `app/presets/`: data generators (random, nearly-sorted, etc.)
+    - `tests/`
+    - `pyproject.toml`
+- [x] **Algorithm Registry:** Implement a plugin architecture for algorithms using a registry.
+- [ ] **Config & Prefs:**
+    - [x] Use `QSettings` for FPS, theme, last array, window geometry.
+    - [x] Use a single source of truth `VizConfig`, with overrides from settings/env.
+- [x] **Error Handling & Logging:**
+    - [x] Keep rotating file handler.
+    - [x] Add global `sys.excepthook` for a user-friendly crash dialog.
+
+## Phase 2: Correctness & Tests
+**Goals:** Every algorithm proven correct; step replay is deterministic.
+
+- [x] **Unit Tests (pytest):**
+    - [x] For each algorithm: test with random arrays, duplicates, already sorted, reverse, few-unique.
+    - [x] Cross-check: `final_array == sorted(original)`.
+- [x] **Property-Based Tests (hypothesis):**
+    - [x] Test with various sizes and integer ranges.
+- [x] **Step-Replay Test:**
+    - [x] Rebuild array by applying emitted `Step` objects and assert it matches the internal result.
+- [ ] **Static Quality:**
+- [x] **Static Quality:**
+    - [x] `ruff`, `black`, `mypy --strict`.
+    - [x] `pre-commit` to enforce locally.

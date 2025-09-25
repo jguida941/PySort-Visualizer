@@ -1,16 +1,15 @@
-import re
-
 def hex_to_rgb(hex_color):
-    hex_color = hex_color.lstrip('#')
+    hex_color = hex_color.lstrip("#")
     if len(hex_color) == 3:
-        hex_color = ''.join([c * 2 for c in hex_color])
+        hex_color = "".join([c * 2 for c in hex_color])
     elif len(hex_color) != 6:
         raise ValueError("Invalid hex color format. Must be 3 or 6 digits.")
 
     try:
-        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-    except ValueError:
-        raise ValueError("Invalid hex color value.")
+        return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+    except ValueError as exc:
+        raise ValueError("Invalid hex color value.") from exc
+
 
 def get_luminance(r, g, b):
     r_srgb = r / 255.0
@@ -30,6 +29,7 @@ def get_luminance(r, g, b):
     luminance = (0.2126 * r_linear) + (0.7152 * g_linear) + (0.0722 * b_linear)
     return luminance
 
+
 def get_contrast_ratio(hex_color1, hex_color2):
     try:
         rgb1 = hex_to_rgb(hex_color1)
@@ -45,6 +45,7 @@ def get_contrast_ratio(hex_color1, hex_color2):
 
     contrast_ratio = (l1 + 0.05) / (l2 + 0.05)
     return round(contrast_ratio, 2)
+
 
 if __name__ == "__main__":
     bg_color = "#0f1115"

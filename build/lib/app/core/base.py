@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import logging
 import os
+import sys
 import time
 from dataclasses import dataclass
 from logging.handlers import RotatingFileHandler
@@ -11,20 +12,54 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 from PyQt6.QtCore import Qt, QTimer, QSize, QRect
 from PyQt6.QtGui import QPen, QColor, QPainter, QBrush, QFontDatabase, QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
-    QStyle, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-    QSplitter, QListWidget, QListWidgetItem, QSlider, QTextEdit, QMessageBox,
-    QSizePolicy, QFileDialog, QSpinBox
+    QStyle,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSplitter,
+    QListWidget,
+    QListWidgetItem,
+    QSlider,
+    QTextEdit,
+    QMessageBox,
+    QSizePolicy,
+    QFileDialog,
+    QSpinBox,
 )
+
+
+def _install_crash_hook():
+    def _hook(exc_type, exc, tb):
+        import traceback
+
+        LOGGER.exception("Uncaught exception", exc_info=(exc_type, exc, tb))
+        QMessageBox.critical(
+            None,
+            "Unexpected error",
+            "The app hit an unexpected error.\n\n" "Open logs/sorting_viz.log for details.",
+        )
+
+    sys.excepthook = _hook
+
+
+_install_crash_hook()
 
 # ------------------------ Logging ------------------------
 
+
 def _build_logger() -> logging.Logger:
+    from pathlib import Path
+
     logger = logging.getLogger("sorting_viz")
     if logger.handlers:
         return logger
     logger.setLevel(logging.INFO)
-    os.makedirs("logs", exist_ok=True)
-    fh = RotatingFileHandler("logs/sorting_viz.log", maxBytes=1_000_000, backupCount=5)
+    log_dir = Path(__file__).resolve().parents[3] / "logs"
+    log_dir.mkdir(exist_ok=True)
+    fh = RotatingFileHandler(log_dir / "sorting_viz.log", maxBytes=1_000_000, backupCount=5)
     fmt = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
     fh.setFormatter(fmt)
     sh = logging.StreamHandler()
@@ -33,9 +68,11 @@ def _build_logger() -> logging.Logger:
     logger.addHandler(sh)
     return logger
 
+
 LOGGER = _build_logger()
 
 # ------------------------ Config ------------------------
+
 
 @dataclass
 class VizConfig:
@@ -59,28 +96,20 @@ class VizConfig:
     hud_color: str = "#e6e6e6"
     checkpoint_stride: int = 200  # snapshot frequency for scrub/reconstruct
 
-# ------------------------ Step model ------------------------
 
-@dataclass
-class Step:
-    """
-    op:
-      - "compare"       indices=(i, j)
-      - "swap"          indices=(i, j), payload=(value_i, value_j)
-      - "pivot"         indices=(p,)
-      - "merge_mark"    indices=(lo, hi)
-      - "merge_compare" indices=(i, j), payload=k (destination index)
-      - "set"           indices=(k,), payload=value
-      - "confirm"       indices=(i,) - final green sweep (used by finish sweep)
-    """
-    op: str
-    indices: Tuple[int, ...]
-    payload: Optional[Any] = None
+from app.core.step import Step
+from app.algos.registry import AlgoInfo
 
 # ------------------------ Canvas ------------------------
 
+
 class VisualizationCanvas(QWidget):
-    def __init__(self, get_state: Callable[[], Dict[str, Any]], cfg: VizConfig, parent: Optional[QWidget] = None):
+    def __init__(
+        self,
+        get_state: Callable[[], Dict[str, Any]],
+        cfg: VizConfig,
+        parent: Optional[QWidget] = None,
+    ):
         super().__init__(parent)
         self._get_state = get_state
         self._cfg = cfg
@@ -99,7 +128,8 @@ class VisualizationCanvas(QWidget):
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(self._cfg.bg_color))
 
-        pen = QPen(QColor("#0d0f14")); pen.setCosmetic(True)
+        pen = QPen(QColor("#0d0f14"))
+        pen.setCosmetic(True)
         painter.setPen(pen)
 
         if arr:
@@ -158,7 +188,7 @@ class VisualizationCanvas(QWidget):
             f"Algo: {metrics.get('algo','')}",
             f"n={len(arr) if arr else 0} | FPS={metrics.get('fps', 0)}",
             f"Compare={metrics.get('comparisons', 0)} | Swaps={metrics.get('swaps', 0)}",
-            f"Steps={metrics.get('step_idx', 0)}/{metrics.get('total_steps','?')} | Time={metrics.get('elapsed_s', 0.0):.2f}s"
+            f"Steps={metrics.get('step_idx', 0)}/{metrics.get('total_steps','?')} | Time={metrics.get('elapsed_s', 0.0):.2f}s",
         ]
 
         fm = painter.fontMetrics()
@@ -170,12 +200,7 @@ class VisualizationCanvas(QWidget):
         w_text = max(fm.horizontalAdvance(s) for s in hud_lines) if hud_lines else 0
         h_text = line_h * len(hud_lines)
 
-        bg_rect = QRect(
-            x_text - pad,
-            y_text - pad,
-            w_text + pad * 2,
-            h_text + pad * 2
-        )
+        bg_rect = QRect(x_text - pad, y_text - pad, w_text + pad * 2, h_text + pad * 2)
 
         # Panel
         painter.setBrush(QColor(0, 0, 0, 120))  # translucent black
@@ -190,7 +215,9 @@ class VisualizationCanvas(QWidget):
 
         painter.end()
 
+
 # ------------------------ Base Visualizer ------------------------
+
 
 class AlgorithmVisualizerBase(QWidget):
     """
@@ -200,13 +227,23 @@ class AlgorithmVisualizerBase(QWidget):
     - CSV export of step trace
     - Robust UI state machine
     """
+
     title: str = "Algorithm"
     STEP_LIST_SAMPLE_RATE: int = 5
     STEP_LIST_MAX_ITEMS: int = 10_000
 
-    def __init__(self, cfg: Optional[VizConfig] = None, parent: Optional[QWidget] = None):
+    def __init__(
+        self,
+        algo_info: AlgoInfo,
+        algo_func: Callable,
+        cfg: Optional[VizConfig] = None,
+        parent: Optional[QWidget] = None,
+    ):
         super().__init__(parent)
         self.cfg = cfg or VizConfig()
+        self.algo_info = algo_info
+        self.algo_func = algo_func
+        self.title = algo_info.name
 
         # Ensure this widget really paints a dark background (not the parent’s light gray)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -225,7 +262,12 @@ class AlgorithmVisualizerBase(QWidget):
         self._confirm_progress: int = -1
 
         # viz state
-        self._highlights: Dict[str, Tuple[int, ...]] = {"compare": (), "swap": (), "pivot": (), "merge": ()}
+        self._highlights: Dict[str, Tuple[int, ...]] = {
+            "compare": (),
+            "swap": (),
+            "pivot": (),
+            "merge": (),
+        }
         self._confirm_indices: Tuple[int, ...] = tuple()
 
         # metrics
@@ -249,7 +291,7 @@ class AlgorithmVisualizerBase(QWidget):
     # ---------- abstract
 
     def _generate_steps(self, arr: List[int]) -> Iterator[Step]:
-        raise NotImplementedError
+        return self.algo_func(arr)
 
     # ---------- UI construction
 
@@ -274,7 +316,8 @@ class AlgorithmVisualizerBase(QWidget):
         row.addWidget(self.btn_pause)
         row.addWidget(self.btn_reset)
         row.addWidget(self.btn_export)
-        row.setSpacing(8); row.setContentsMargins(8, 6, 8, 0)
+        row.setSpacing(8)
+        row.setContentsMargins(8, 6, 8, 0)
 
         speed_row = QHBoxLayout()
         fps_label = QLabel("FPS:")
@@ -290,7 +333,8 @@ class AlgorithmVisualizerBase(QWidget):
         self.spn_fps.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
         self.spn_fps.setFixedWidth(64)
         speed_row.addWidget(self.spn_fps)
-        speed_row.setSpacing(8);  speed_row.setContentsMargins(8, 0, 8, 0)
+        speed_row.setSpacing(8)
+        speed_row.setContentsMargins(8, 0, 8, 0)
 
         scrub_row = QHBoxLayout()
         self.lbl_scrub = QLabel("Step: 0/0")
@@ -301,21 +345,34 @@ class AlgorithmVisualizerBase(QWidget):
         self.btn_step_back = QPushButton("Step ◀")
 
         icon_size = QSize(16, 16)
-        for btn in (self.btn_random, self.btn_start, self.btn_pause, self.btn_reset, self.btn_export, self.btn_step_back, self.btn_step_fwd):
+        for btn in (
+            self.btn_random,
+            self.btn_start,
+            self.btn_pause,
+            self.btn_reset,
+            self.btn_export,
+            self.btn_step_back,
+            self.btn_step_fwd,
+        ):
             btn.setIconSize(icon_size)
 
         self.btn_random.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload))
         self.btn_start.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
         self.btn_pause.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPause))
-        self.btn_reset.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton))
-        self.btn_export.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton))
+        self.btn_reset.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton)
+        )
+        self.btn_export.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton)
+        )
         self.btn_step_back.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowBack))
         self.btn_step_fwd.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowForward))
         scrub_row.addWidget(self.lbl_scrub)
         scrub_row.addWidget(self.sld_scrub)
         scrub_row.addWidget(self.btn_step_back)
         scrub_row.addWidget(self.btn_step_fwd)
-        scrub_row.setSpacing(8);  scrub_row.setContentsMargins(8, 0, 8, 6)
+        scrub_row.setSpacing(8)
+        scrub_row.setContentsMargins(8, 0, 8, 6)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         self.canvas = VisualizationCanvas(self._get_canvas_state, self.cfg)
@@ -357,6 +414,39 @@ class AlgorithmVisualizerBase(QWidget):
         self.lst_steps.setStyleSheet("font-size: 11px;")
         self.lst_steps.itemActivated.connect(self._on_step_item_activated)
 
+        focusables = [
+            self.le_input,
+            self.spn_fps,
+            self.sld_fps,
+            self.sld_scrub,
+            self.btn_random,
+            self.btn_start,
+            self.btn_pause,
+            self.btn_reset,
+            self.btn_export,
+            self.btn_step_back,
+            self.btn_step_fwd,
+            self.lst_steps,
+            self.txt_log,
+        ]
+        is_macos = sys.platform == "darwin"
+        for w in focusables:
+            w.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+            if is_macos:
+                w.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+
+        # (optional) nice keyboard order
+        self.setTabOrder(self.le_input, self.btn_random)
+        self.setTabOrder(self.btn_random, self.btn_start)
+        self.setTabOrder(self.btn_start, self.btn_pause)
+        self.setTabOrder(self.btn_pause, self.btn_reset)
+        self.setTabOrder(self.btn_reset, self.btn_export)
+        self.setTabOrder(self.btn_export, self.sld_fps)
+        self.setTabOrder(self.sld_fps, self.spn_fps)
+        self.setTabOrder(self.spn_fps, self.sld_scrub)
+        self.setTabOrder(self.sld_scrub, self.btn_step_back)
+        self.setTabOrder(self.btn_step_back, self.btn_step_fwd)
+
         root.addLayout(row)
         root.addLayout(speed_row)
         root.addLayout(scrub_row)
@@ -365,72 +455,100 @@ class AlgorithmVisualizerBase(QWidget):
 
         root.setContentsMargins(12, 12, 12, 12)
         root.setSpacing(8)
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            f"""
 /* Global */
-QWidget { color:#e6e6e6; background:#0f1115; }
+QWidget {{ color:#e6e6e6; background:#0f1115; }}
 
 /* Accent helpers */
  @accent: #6aa0ff; /* (Qt ignores variables, left as a reminder) */
 
 /* Caption pills – same accent as buttons */
-QLabel#caption {
+QLabel#caption {{
   color:#e6e6e6;
   background:rgba(106,160,255,0.06);
-  border:1px solid #6aa0ff;
+  border:1px solid {self.cfg.bar_color};
   border-radius:8px;
   padding:4px 10px;
   font-weight:600;
-}
+}}
 
 /* Inputs (LineEdit + SpinBox) – same hollow glass */
-QLineEdit, QAbstractSpinBox {
+QLineEdit, QAbstractSpinBox {{
   color:#e6e6e6;
   background:rgba(106,160,255,0.06);
-  border:1px solid #6aa0ff;
+  border:1px solid {self.cfg.bar_color};
   border-radius:6px;
   padding:6px 8px;
-}
-QLineEdit::placeholder { color:#b6bfca; }
-QLineEdit:focus, QAbstractSpinBox:focus { border-color:#9bc0ff; }
+}}
+QLineEdit::placeholder {{ color:#b6bfca; }}
+QLineEdit:focus, QAbstractSpinBox:focus {{ border-color:#9bc0ff; }}
 
 /* Buttons – hollow glass */
-QPushButton {
+QPushButton {{
   color:#e6e6e6;
   background:transparent;
-  border:1px solid #6aa0ff;
+  border:1px solid {self.cfg.bar_color};
   border-radius:6px;
   padding:6px 10px;
-}
-QPushButton:hover   { background:rgba(106,160,255,0.20); }
-QPushButton:pressed { background:rgba(106,160,255,0.40); }
-QPushButton:disabled{
+}}
+QPushButton:hover   {{ background:rgba(106,160,255,0.20); }}
+QPushButton:pressed {{ background:rgba(106,160,255,0.40); }}
+QPushButton:disabled{{
   color:#7b8496; border-color:#3e4a60; background:transparent;
-}
+}}
 
 /* Lists / Log – same accent frame */
-QListWidget, QTextEdit {
+QListWidget, QTextEdit {{
   color:#e6e6e6;
   background:rgba(106,160,255,0.04);
-  border:1px solid #6aa0ff;
+  border:1px solid {self.cfg.bar_color};
   border-radius:6px;
-}
-QListWidget::item:selected { background:#243042; }
+}}
+QListWidget::item:selected {{ background:#243042; }}
 
 /* Sliders – groove outlined in accent so FPS/Step “match” */
-QSlider::groove:horizontal {
+QSlider::groove:horizontal {{
   height:8px;
   background:rgba(106,160,255,0.06);
-  border:1px solid #6aa0ff;
+  border:1px solid {self.cfg.bar_color};
   border-radius:4px;
-}
-QSlider::handle:horizontal {
+}}
+QSlider::handle:horizontal {{
   width:18px;
   background:#e6e6e6;
-  border:1px solid #6aa0ff;
+  border:1px solid {self.cfg.bar_color};
   border-radius:9px;
   margin:-6px 0;
-}
-""")
+}}
+
+/* Cobalt accent */
+QLineEdit:focus,
+QAbstractSpinBox:focus,
+QPushButton:focus,
+QListWidget:focus,
+QTextEdit:focus {{
+  border: 1px solid #2f6bff;              /* bright cobalt */
+  background: rgba(47,107,255,0.14);       /* subtle glow */
+}}
+
+/* Sliders: groove + handle focus */
+QSlider::groove:horizontal:focus {{
+  border: 1px solid #2f6bff;
+  background: rgba(47,107,255,0.12);
+}}
+QSlider::handle:horizontal:focus {{
+  border: 2px solid #2f6bff;               /* a bit bolder on the knob */
+  margin: -7px 0;                          /* compensates so the handle doesn't shift */
+}}
+
+/* Make sure no native subpage color fights the look */
+QSlider::sub-page:horizontal,
+QSlider::add-page:horizontal {{ background: transparent; border: none; }}
+
+QSpinBox::up-button, QSpinBox::down-button {{ width: 0; height: 0; border: none; }}
+"""
+        )
 
     def _rebind(self) -> None:
         self.btn_random.clicked.connect(self._on_randomize)
@@ -508,8 +626,8 @@ QSlider::handle:horizontal {
                 "fps": self.sld_fps.value(),
                 "step_idx": self._step_idx,
                 "total_steps": len(self._steps) if self._steps else 0,
-                "elapsed_s": elapsed
-            }
+                "elapsed_s": elapsed,
+            },
         }
 
     def _set_array(self, arr: List[int]) -> None:
@@ -539,6 +657,7 @@ QSlider::handle:horizontal {
     def _on_randomize(self) -> None:
         try:
             import random
+
             n = self.cfg.default_n
             arr = [random.randint(self.cfg.min_val, self.cfg.max_val) for _ in range(n)]
             self._set_array(arr)
@@ -577,7 +696,7 @@ QSlider::handle:horizontal {
                         return
 
             # Construct generator and start animation
-            self._step_source = self._generate_steps(self._array)
+            self._step_source = self._generate_steps(list(self._array))
             self._t0 = time.time()
             fps = max(self.cfg.fps_min, min(self.cfg.fps_max, self.sld_fps.value()))
             self._timer.start(int(1000 / fps))
@@ -660,7 +779,9 @@ QSlider::handle:horizontal {
 
     def _start_finish_animation(self) -> None:
         self.txt_log.append(f"Finished. Comparisons={self._comparisons}, Swaps={self._swaps}")
-        LOGGER.info("Finished algo=%s comps=%d swaps=%d", self.title, self._comparisons, self._swaps)
+        LOGGER.info(
+            "Finished algo=%s comps=%d swaps=%d", self.title, self._comparisons, self._swaps
+        )
         self._confirm_progress = 0
         self._confirm_indices = tuple()
         self._set_narration("Sort complete. Finalizing display…")
@@ -712,10 +833,7 @@ QSlider::handle:horizontal {
         try:
             if op == "compare":
                 i, j = idx
-                return (
-                    f"Comparing {safe_get(i)} (index {i}) with "
-                    f"{safe_get(j)} (index {j})."
-                )
+                return f"Comparing {safe_get(i)} (index {i}) with " f"{safe_get(j)} (index {j})."
             if op == "merge_compare":
                 i, j = idx
                 dest = payload if isinstance(payload, int) else "?"
@@ -750,10 +868,16 @@ QSlider::handle:horizontal {
     def _append_step_list(self, step: Step) -> None:
         current_idx = len(self._steps)
         important_ops = {"swap", "set", "pivot", "merge_mark"}
-        if current_idx > 1 and (current_idx % self.STEP_LIST_SAMPLE_RATE != 0) and (step.op not in important_ops):
+        if (
+            current_idx > 1
+            and (current_idx % self.STEP_LIST_SAMPLE_RATE != 0)
+            and (step.op not in important_ops)
+        ):
             return
 
-        text = f"{step.op}: {step.indices}" + (f" -> {step.payload}" if step.payload is not None else "")
+        text = f"{step.op}: {step.indices}" + (
+            f" -> {step.payload}" if step.payload is not None else ""
+        )
         item = QListWidgetItem(text)
         item.setData(Qt.ItemDataRole.UserRole, current_idx)
         self.lst_steps.addItem(item)

@@ -1,12 +1,11 @@
 from __future__ import annotations
-
 import sys
-
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget
 
-from .bubble import BubbleSortVisualizer
-from .merge import MergeSortVisualizer
-from .quick import QuickSortVisualizer
+# Import algorithms to register them
+from app.algos import bubble, quick, merge
+from app.algos.registry import REGISTRY, INFO
+from app.core.base import AlgorithmVisualizerBase
 
 
 class MainWindow(QMainWindow):
@@ -16,15 +15,17 @@ class MainWindow(QMainWindow):
         self.resize(1200, 850)
 
         tabs = QTabWidget()
-        tabs.addTab(BubbleSortVisualizer(), "Bubble Sort")
-        tabs.addTab(QuickSortVisualizer(), "Quick Sort")
-        tabs.addTab(MergeSortVisualizer(), "Merge Sort")
+        for name, algo_func in REGISTRY.items():
+            info = INFO[name]
+            visualizer = AlgorithmVisualizerBase(algo_info=info, algo_func=algo_func)
+            tabs.addTab(visualizer, name)
         self.setCentralWidget(tabs)
 
 
 def main() -> None:
     app = QApplication(sys.argv)
-    app.setStyleSheet("""
+    app.setStyleSheet(
+        """
 QMainWindow, QTabWidget::pane, QTabWidget {
   background: #0f1115;
 }
@@ -36,7 +37,8 @@ QTabBar::tab {
 }
 QTabBar::tab:selected { background: #2a2f3a; color: #ffffff; }
 QTabBar::tab:hover    { background: #202634; }
-""")
+"""
+    )
     window = MainWindow()
     window.show()
     sys.exit(app.exec())

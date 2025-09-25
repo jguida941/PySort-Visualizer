@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: sorting-viz
+Version: 0.1.0
+Requires-Python: >=3.10
+License-File: LICENSE.txt
+Requires-Dist: PyQt6>=6.6
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"
+Requires-Dist: hypothesis>=6; extra == "dev"
+Requires-Dist: ruff>=0.6; extra == "dev"
+Requires-Dist: black>=24; extra == "dev"
+Requires-Dist: mypy>=1.10; extra == "dev"
+Requires-Dist: pre-commit>=3; extra == "dev"
+Requires-Dist: PyQt6-stubs>=6.6; extra == "dev"
+Dynamic: license-file
