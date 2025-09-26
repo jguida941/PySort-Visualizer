@@ -4,7 +4,7 @@ A production-grade, research-friendly PyQt6 visualizer for sorting algorithms an
 
 Every animation frame is backed by an explicit stream of Step records, ensuring deterministic replay, reproducible metrics, and faithful narration of each operation.
 
-**From bubble to quick and merge: compare, replay, and measure, all in one PyQt6 desktop tool.**
+**From bubble to radix and timsort: compare, replay, and measure a full suite of algorithms in one PyQt6 desktop tool.**
 
 ---
 ## Bubble Sort
@@ -25,7 +25,7 @@ Every animation frame is backed by an explicit stream of Step records, ensuring 
 
 ## Highlights
 
-- **Instrumented algorithms**: Bubble, Insertion, Iterative Quick (median-of-three), and Bottom‑Up Merge Sort register themselves through a plugin registry. Each yields richly-typed `Step` objects so the UI, narration, and tests stay in lockstep.
+- **Instrumented algorithms**: Bubble, Insertion, Selection, Shell, Heap, Comb, Cocktail, Quick (median-of-three), Bottom‑Up Merge, Counting, Radix (LSD), Bucket, and Timsort Trace register themselves through a plugin registry. Each yields richly-typed `Step` objects so the UI, narration, and tests stay in lockstep.
 - **Deterministic replay**: Checkpoints capture array snapshots/metrics every *n* steps (`VizConfig.checkpoint_stride`). Seeking restores the nearest checkpoint, replays intervening steps, and guarantees the HUD, highlights, and narration remain coherent.
 - **Manual & automated playback**: `Step ▶`/`Step ◀` buttons advance or rewind one step at a time (even before a full run), while the timer provides smooth animation at user-selected FPS. Scrubbing, keyboard shortcuts, and narration updates respect both modes.
 - **Color-coded semantics**: Dedicated highlight channels clarify intent:
@@ -47,36 +47,54 @@ Every animation frame is backed by an explicit stream of Step records, ensuring 
 ```
 MergeSortAlgorithm-master/
 ├── README.md
+├── LICENSE.txt
 ├── main.py                      # CLI entry point → src/app/app.py
-├── pyproject.toml               # build + lint/type settings
+├── pyproject.toml               # Build + lint/type settings
 ├── requirements.txt
+├── scripts/
+│   ├── setup.sh
+│   └── setup.bat
+├── build/                       # Optional build artifacts
+├── docs/
+│   ├── audit.md
+│   ├── phase.md
+│   └── ROADMAP.md
+├── native/
+│   └── radix_simd.cpp           # Standalone Apple NEON sample (see README)
 ├── src/
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── algos/
 │   │   │   ├── bubble.py
+│   │   │   ├── bucket.py
+│   │   │   ├── cocktail.py
+│   │   │   ├── comb.py
+│   │   │   ├── counting.py
+│   │   │   ├── heap.py
 │   │   │   ├── insertion.py
 │   │   │   ├── merge.py
 │   │   │   ├── quick.py
+│   │   │   ├── radix_lsd.py
+│   │   │   ├── selection.py
+│   │   │   ├── shell.py
+│   │   │   ├── timsort_trace.py
 │   │   │   └── registry.py
 │   │   ├── app.py               # Main window composition
-│   │   └── core/
-│   │       ├── base.py          # AlgorithmVisualizerBase & canvas
-│   │       ├── replay.py        # apply_step_sequence utilities
-│   │       └── step.py          # Step dataclass / contract
+│   │   ├── core/
+│   │   │   ├── base.py          # AlgorithmVisualizerBase & canvas
+│   │   │   ├── replay.py        # apply_step_sequence utilities
+│   │   │   └── step.py          # Step dataclass / contract
+│   │   ├── presets/             # Saved demos and themes
+│   │   └── ui/                  # Qt Designer assets / placeholders
 │   └── sorting_viz.egg-info/ …
-├── native/
-│   └── radix_simd.cpp           # Standalone Apple NEON sample (see README)
 ├── tests/
 │   ├── conftest.py              # Spins up shared QApplication
 │   ├── test_algorithms_property.py
 │   ├── test_step_determinism.py
+│   ├── test_step_invariants.py
 │   └── test_step_replay.py
-├── docs/
-│   ├── audit.md
-│   ├── phase.md
-│   └── ROADMAP.md
-└── logs/                        # Populated at runtime (ignored if absent)
+├── logs/                        # Populated at runtime (ignored if absent)
+└── gitignore                    # Project-specific ignore rules
 ```
 
 ---
