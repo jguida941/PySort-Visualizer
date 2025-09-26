@@ -73,7 +73,9 @@ MergeSortAlgorithm-master/
 │   ├── test_step_determinism.py
 │   └── test_step_replay.py
 ├── docs/
-│   └── Screenshot …             # Reference UI snapshot
+│   ├── audit.md
+│   ├── phase.md
+│   └── ROADMAP.md
 └── logs/                        # Populated at runtime (ignored if absent)
 ```
 
