@@ -65,6 +65,8 @@ MergeSortAlgorithm-master/
 │   │       ├── replay.py        # apply_step_sequence utilities
 │   │       └── step.py          # Step dataclass / contract
 │   └── sorting_viz.egg-info/ …
+├── native/
+│   └── radix_simd.cpp           # Standalone Apple NEON sample (see README)
 ├── tests/
 │   ├── conftest.py              # Spins up shared QApplication
 │   ├── test_algorithms_property.py
@@ -134,6 +136,7 @@ All algorithms operate on the same contract; replay code treats `shift` exactly 
 - `pytest -q` exercises deterministic behaviour, property checks (Hypothesis up to 60 integers, −1000..1000), and step replay invariants.
 - `mypy src` runs under `--strict`; Qt stubs are ignored via `ignore_missing_imports = true` to work around incomplete PyQt6 type hints.
 - `ruff` (style, pyupgrade, import sort) and `black` keep the codebase consistent; add them to your own pre-commit hooks if you want automatic formatting.
+- A standalone Apple NEON radix-sieve sample lives in `native/radix_simd.cpp`. Build it with `clang++` on Apple silicon for SIMD experimentation separate from the PyQt application.
 
 ---
 
@@ -150,6 +153,7 @@ All algorithms operate on the same contract; replay code treats `shift` exactly 
 | Comb Sort             | ✗      | ✓        | Comparison   | `O(n log n)` / `O(n²)` / `O(n²)`       | Shrinking gap (factor 1.3) removes turtles; finish sweep confirms every element.     |
 | Quick Sort            | ✗      | ✓        | Comparison   | `O(n log n)` / `O(n log n)` / `O(n²)` | Median-of-three pivot selection, pivots highlighted green, swaps recorded with payloads. |
 | Merge Sort            | ✓      | ✗        | Comparison   | `O(n log n)` / `O(n log n)` / `O(n log n)` | Violet merge windows, yellow comparisons, orange merge writes, deterministic bottom-up passes. |
+| Timsort Trace         | ✓      | ✗        | Comparison   | `O(n)` / `O(n log n)` / `O(n log n)`   | Detects runs (via insertion sort) then merges them; approximates Python's Timsort trace. |
 | Counting Sort         | ✓      | ✗        | Non-comparison | `O(n + k)` / `O(n + k)` / `O(n + k)` | Uses buckets indexed by value; writes back with `set` + cyan key highlights.         |
 | Radix Sort (LSD)      | ✓      | ✗        | Non-comparison | `O(d(n + k))` across passes           | Offsets negatives once, then leverages stable per-digit counting to churn through integers efficiently; every placement is streamed via `set`. |
 | Bucket Sort           | ✓      | ✗        | Non-comparison | `O(n)` / `O(n + k)` / `O(n²)`         | Normalizes values into buckets, sorts locally, replays as stable writes.             |
@@ -162,6 +166,7 @@ Each implementation mutates its working copy in sync with emitted steps so that 
 
 - **Linear-time specialists.** Counting Sort and Radix Sort (LSD) excel on integer datasets when the range (`k`) or number of digits (`d`) remain modest. Radix offsets negatives a single time and then streams stable per-digit counting passes, making it a go-to choice for large integer workloads.
 - **Distribution-aware Bucket Sort.** Bucket Sort normalizes values into `n` buckets and sorts inside each bucket using Python’s highly optimised Timsort. It performs best when values are uniformly distributed; in adversarial cases where all elements land in one bucket, the complexity degrades toward quadratic.
+- **Run-aware Timsort trace.** The Timsort trace algorithm models Python’s hybrid sorter by detecting short ascending runs (sorted via insertion sort) before merging them with a merge-sort style pass. It achieves linear time on already sorted data and stays `O(n log n)` in the worst case.
 - **Gap-based accelerators.** Shell Sort and Comb Sort reduce “turtles” (small values trapped near the end of the array) far faster than pure quadratic sorts by comparing elements `gap` positions apart before finishing with insertion/bubble behaviour.
 - **General-purpose workhorses.** Quick Sort remains the fastest comparison sort on average, Heap Sort guarantees `O(n log n)` regardless of input, and Merge Sort provides stability with predictable performance.
 - **Nearly sorted data.** Insertion Sort and Cocktail Shaker Sort run in linear time when the input is almost sorted. Bubble and Selection Sort remain in the suite mainly as pedagogical baselines.
@@ -199,10 +204,10 @@ pytest -q
 |-------|--------|-------|
 | 1. Foundations | ✓ Complete | src/app layout, registry, VizConfig, crash-safe logging |
 | 2. Correctness | ✓ Complete | Property tests, replay determinism, mypy strictness |
-| 3. Algorithms  | In Progress | Bubble, Insertion, Merge, Quick done. Upcoming: Selection, Heap, Shell, Radix LSD, Counting, Bucket, Timsort trace |
-| 4. UI/UX      | In Progress | Hollow-glass theme + color legend shipped; toolbar/menu, theme toggle, compare mode, explanations panel pending |
-| 5. Performance | Planned | Canvas batching, OpenGL toggle, dynamic FPS |
-| 6. Data/Export | In Progress | CSV export live; seeded presets, JSON import/export, PNG/GIF, benchmark mode TBD |
+| 3. Algorithms  | ✓ Complete | Bubble, Insertion, Selection, Heap, Shell, Cocktail, Comb, Quick, Merge, Counting, Radix LSD, Bucket, Timsort trace |
+| 4. UI/UX      | In Progress | Hollow-glass theme + legend shipped; toolbar/menu, theme toggle, compare mode, explanations panel pending |
+| 5. Performance | Planned | Canvas batching, optional OpenGL backend, dynamic FPS throttling |
+| 6. Data/Export | In Progress | CSV export live; seeded presets, JSON/PNG/GIF export, benchmark mode TBD |
 | 7. CI/CD       | Planned | Need GitHub Actions matrix, installer pipelines |
 | 8. Docs        | In Progress | README + roadmap exist; still need CONTRIBUTING, user guide, algorithm notes |
 

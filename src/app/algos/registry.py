@@ -36,6 +36,7 @@ _ALGO_MODULES: tuple[str, ...] = (
     "app.algos.radix_lsd",
     "app.algos.bucket",
     "app.algos.comb",
+    "app.algos.timsort_trace",
 )
 
 

@@ -1,5 +1,7 @@
 # Production-Grade Feature Roadmap
 
+> Current phase snapshot: see [phase.md](phase.md).
+
 This document outlines the plan to elevate the project to a production-grade application with more features, algorithms, and polish.
 
 ## Phase 1: Foundations & Architecture
@@ -50,7 +52,7 @@ This document outlines the plan to elevate the project to a production-grade app
     - [x] Radix Sort LSD — implemented in `src/app/algos/radix_lsd.py`, handles ints via offsetting.
     - [x] Bucket Sort — implemented in `src/app/algos/bucket.py`, outputs stable sorted buckets.
 - [ ] **Advanced:**
-    - [ ] Timsort "trace" (simplified)
+    - [x] Timsort "trace" (simplified) — implemented in `src/app/algos/timsort_trace.py`.
 - [ ] **Algorithm Metadata:**
     - [ ] Expose metadata for each algorithm (stable, in-place, complexity) in the UI.
 

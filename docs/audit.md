@@ -20,17 +20,17 @@ Implemented and fully covered:
 - Shell Sort
 - Cocktail Shaker Sort
 - Comb Sort
+- Quick Sort
+- Merge Sort (bottom-up trace)
 - Counting Sort
 - Radix Sort LSD
 - Bucket Sort
-- Iterative Merge Sort (bottom-up)
-- Iterative Quick Sort (median-of-three)
+- Timsort Trace
 
 Outstanding priorities:
-1. Comb Sort (optional comparison variant)
-2. Radix Sort (LSD)
-3. Bucket Sort
-4. Timsort trace / advanced visual
+1. Algorithm metadata surfaced in UI (Phase 4).
+2. Compare mode and explanations panel.
+3. Remaining non-visual optimisations (canvas batching, seeds, JSON/GIF export).
 
 ## Phase 4: UI/UX Polish
 - Legend, manual step controls, value labels DONE
@@ -48,10 +48,9 @@ Outstanding priorities:
 - CI matrix, installers, docs, community files
 
 ## Immediate Next Steps (Suggested)
-1. Implement **Heap Sort** with full Step instrumentation and integrate into registry/tests.
-2. Implement **Shell Sort** or **Comb/Cocktail Sort** to round out comparison algorithms.
-3. Add metadata exposure in UI (tab labels or forthcoming explanations panel).
-4. Begin work on data presets + seeded RNG once core algorithms are in place.
+1. Expose algorithm metadata in the UI (compare mode + explanations panel).
+2. Implement data presets + seeded RNG with deterministic HUD display.
+3. Add JSON/PNG/GIF export and benchmark mode (Phase 6).
 
 ## Latest Regression Run (2024-XX-XX)
 - `ruff check` → pass
